@@ -60,13 +60,21 @@
     </div>
 
     <script>
-      /* global Vue, firebase, Vuefire */
+        var firebaseConfig = {
+            apiKey: "AIzaSyAP9D6Fe6wX0gs_tLEqB1MPDpjFZImJpnQ",
+            authDomain: "simple-logistic.firebaseapp.com",
+            databaseURL: "https://simple-logistic.firebaseio.com",
+            projectId: "simple-logistic",
+            storageBucket: "simple-logistic.appspot.com",
+            messagingSenderId: "887898028952",
+            appId: "1:887898028952:web:945649134abde9be"
+        };
+        // Initialize Firebase
+        //firebase.initializeApp(firebaseConfig);
+    /* global Vue, firebase, Vuefire */
       Vue.use(Vuefire.firestorePlugin)
       var db = firebase
-        .initializeApp({
-          projectId: 'vue-fire-store',
-          databaseURL: 'https://simple-logistic.firebaseio.com/',
-        })
+        .initializeApp(firebaseConfig)
         .firestore()
       db.settings({ timestampsInSnapshots: true })
       var todos = db.collection('todos')
