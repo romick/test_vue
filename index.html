@@ -8,7 +8,7 @@
   <div id="app">
     {{ message }}
   </div>
-  
+
   <div id="app-3">
     <span v-if="seen">Now you see me</span>
   </div>
@@ -20,12 +20,17 @@
       </li>
     </ol>
   </div>
-  
+
   <div id="app-5">
     <p>{{ message }}</p>
     <button v-on:click="reverseMessage">Reverse Message</button>
   </div>
-  
+
+<div id="app-6">
+  <p>{{ message }}</p>
+  <input v-model="message">
+</div>
+
   <script>
     var app = new Vue({
       el: '#app',
@@ -60,6 +65,14 @@
         }
       }
     })
+
+var app6 = new Vue({
+  el: '#app-6',
+  data: {
+    message: 'Hello Vue!'
+  }
+})
+
   </script>
 </body>
 </html>
