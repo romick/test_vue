@@ -1,111 +1,126 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>My first Vue app</title>
-  <script src="https://unpkg.com/vue"></script>
-</head>
-<body>
-  <div id="app">
-    {{ message }}
-  </div>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>VueFire Todo App Demo</title>
+    <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase.js"></script>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuefire@2.1.0/dist/vuefire.min.js"></script>
+  </head>
 
-  <div id="app-3">
-    <span v-if="seen">Now you see me</span>
-  </div>
-
-  <div id="app-4">
-    <ol>
-      <li v-for="todo in todos">
-        {{ todo.text }}
-      </li>
-    </ol>
-  </div>
-
-  <div id="app-5">
-    <p>{{ message }}</p>
-    <button v-on:click="reverseMessage">Reverse Message</button>
-  </div>
-
-<div id="app-6">
-  <p>{{ message }}</p>
-  <input v-model="message">
-</div>
-
-<div id="app-7">
-  <ol>
+  <body>
     <!--
-      Now we provide each todo-item with the todo object
-      it's representing, so that its content can be dynamic.
-      We also need to provide each component with a "key",
-      which will be explained later.
+      Before running this example, make sure to:
+
+      1. cd path/to/vuefire
+      2. npm install
+      3. npm run build
+
+      Then you can open this file in your browser.
+      If you just prefer to see this example with
+      the latest published version of VueFire, you
+      play with the code in this fiddle:
+
+      https://jsfiddle.net/posva/wtyop5jy/
     -->
-    <todo-item
-      v-for="item in groceryList"
-      v-bind:todo="item"
-      v-bind:key="item.id"
-    ></todo-item>
-  </ol>
-</div>
 
-  <script>
-    var app = new Vue({
-      el: '#app',
-      data: {
-        message: 'Hello Vue!'
-      }
-    })
-    var app3 = new Vue({
-      el: '#app-3',
-      data: {
-        seen: true
-      }
-    })
-    var app4 = new Vue({
-      el: '#app-4',
-      data: {
-        todos: [
-          { text: 'Learn JavaScript' },
-          { text: 'Learn Vue' },
-          { text: 'Build something awesome' }
-        ]
-      }
-    })
-    var app5 = new Vue({
-      el: '#app-5',
-      data: {
-        message: 'Hello Vue.js!'
-      },
-      methods: {
-        reverseMessage: function () {
-          this.message = this.message.split('').reverse().join('')
-        }
-      }
-    })
+    <div id="app">
+      <button @click="toggleTodos">Toggle todos</button> <br />
+      <input
+        v-model.trim="newTodoText"
+        @keyup.enter="addTodo"
+        placeholder="Add new todo"
+      />
+      <ul>
+        <li v-for="todo in todos">
+          <input
+            :value="todo.text"
+            @input="updateTodoText(todo, $event.target.value)"
+          />
+          <button @click="removeTodo(todo)">X</button>
+        </li>
+      </ul>
 
-var app6 = new Vue({
-  el: '#app-6',
-  data: {
-    message: 'Hello Vue!'
-  }
-})
+      <h4>collection with refs</h4>
 
+      <ul>
+        <li v-for="moment in moments">{{ moment }}</li>
+      </ul>
 
-Vue.component('todo-item', {
-  props: ['todo'],
-  template: '<li>{{ todo.text }}</li>'
-})
+      <h5>Original data</h5>
 
-var app7 = new Vue({
-  el: '#app-7',
-  data: {
-    groceryList: [
-      { id: 0, text: 'Vegetables' },
-      { id: 1, text: 'Cheese' },
-      { id: 2, text: 'Whatever else humans are supposed to eat' }
-    ]
-  }
-})
+      <ul>
+        <li v-for="tweet in tweets">{{ tweet }}</li>
+      </ul>
 
-  </script>
-</body>
+      <p>config:</p>
+      <pre>
+        {{ config }}
+      </pre>
+    </div>
+
+    <script>
+      /* global Vue, firebase, Vuefire */
+      Vue.use(Vuefire.firestorePlugin)
+      var db = firebase
+        .initializeApp({
+          projectId: 'vue-fire-store',
+          databaseURL: 'https://vue-fire-store.firebaseio.com',
+        })
+        .firestore()
+      db.settings({ timestampsInSnapshots: true })
+      var todos = db.collection('todos')
+      var unFinishedTodos = todos.where('finished', '==', false)
+      var finishedTodos = todos.where('finished', '==', true)
+      var config = db.collection('configs').doc('jORwjIykFo2NmkdzTkhU')
+
+      var vm = new Vue({
+        el: '#app',
+        data: {
+          todos: [],
+          tweets: [],
+          moments: [],
+          nested: [],
+          config: null,
+          newTodoText: '',
+        },
+
+        firestore: {
+          todos: unFinishedTodos,
+          moments: db.collection('moments'),
+          nested: db.collection('nested'),
+          tweets: db.collection('tweets'),
+          config: config,
+        },
+
+        methods: {
+          addTodo: function() {
+            if (this.newTodoText) {
+              todos.add({
+                finished: false,
+                text: this.newTodoText,
+                created: firebase.firestore.FieldValue.serverTimestamp(),
+              })
+              this.newTodoText = ''
+            }
+          },
+          updateTodoText: function(todo, newText) {
+            todos.doc(todo.id).update({ text: newText })
+          },
+          removeTodo: function(todo) {
+            todos.doc(todo.id).delete()
+          },
+          toggleTodos: function() {
+            console.log(this.$firestoreRefs.todos === unFinishedTodos)
+            this.$bind(
+              'todos',
+              this.$firestoreRefs.todos === unFinishedTodos
+                ? finishedTodos
+                : unFinishedTodos
+            )
+          },
+        },
+      })
+    </script>
+  </body>
 </html>
